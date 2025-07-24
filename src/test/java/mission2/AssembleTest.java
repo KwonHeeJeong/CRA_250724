@@ -1,78 +1,46 @@
 package mission2;
+
+import mission2.strategy.AssembleStrategy;
+import mission2.strategy.EngineStrategy;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.Scanner;
 
+import static mission2.Constant.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static mission2.Constant.*;
 
 class AssembleTest {
-
     @Test
-    public void testDoActionOfCurrentStep_RunTest() {
-        Assemble assembleSpy = Mockito.spy(new Assemble());
-        assembleSpy.doActionOfCurrentStep(Run_Test, 1);
-        verify(assembleSpy, times(1)).doRunTest(1);
-    }
-    @Test
-    public void testDoActionOfCurrentStep_CarType_Q() {
-        Assemble assembleSpy = Mockito.spy(new Assemble());
-        assembleSpy.doActionOfCurrentStep(CarType_Q, 1);
-        verify(assembleSpy, times(1)).selectCarType(1);
-    }
-    @Test
-    public void testDoActionOfCurrentStep_Engine_Q() {
-        Assemble assembleSpy = Mockito.spy(new Assemble());
-        assembleSpy.doActionOfCurrentStep(Engine_Q, 1);
-        verify(assembleSpy, times(1)).selectEngine(1);
-    }
-    @Test
-    public void testDoActionOfCurrentStep_BrakeSystem_Q() {
-        Assemble assembleSpy = Mockito.spy(new Assemble());
-        assembleSpy.doActionOfCurrentStep(BrakeSystem_Q, 1);
-        verify(assembleSpy, times(1)).selectBrakeSystem(1);
-    }
-    @Test
-    public void testDoActionOfCurrentStep_SteeringSystem_Q() {
-        Assemble assembleSpy = Mockito.spy(new Assemble());
-        assembleSpy.doActionOfCurrentStep(SteeringSystem_Q, 1);
-        verify(assembleSpy, times(1)).selectSteeringSystem(1);
-    }
-    @Test
-    public void testDoActionOfCurrentStep_OutOfRange() {
-        Assemble assembleSpy = Mockito.spy(new Assemble());
-        assembleSpy.doActionOfCurrentStep(-1, 1);
-        verify(assembleSpy, times(1)).delay(800);
-    }
-
-    @Test
-    void testDoRunTest_answer1() {
-        Assemble assembleSpy = Mockito.spy(new Assemble());
-        assembleSpy.doRunTest( 1);
-        verify(assembleSpy, times(1)).runProducedCar();
-    }
-    @Test
-    void testDoRunTest_answer2() {
-        Assemble assembleSpy = Mockito.spy(new Assemble());
-        assembleSpy.doRunTest( 2);
-        verify(assembleSpy, times(1)).testProducedCar();
-    }
-    @Test
-    void testDoRunTest_OutOfRange() {
-        Assemble assembleSpy = Mockito.spy(new Assemble());
-        assembleSpy.doRunTest( 3);
-        verify(assembleSpy, times(0)).runProducedCar();
-    }
-
-    @Test
-    void testBackStep_RunTest() {
-        Assemble assembleSpy = Mockito.spy(new Assemble());
-        int actual = assembleSpy.backStep(Run_Test);
+    void testAssemble() {
+        Assemble assemble = new Assemble();
+        int actual = assemble.backStep(Run_Test);
         assertEquals(CarType_Q, actual);
     }
+
+    @Test
+    void testGetStack() {
+        Assemble assemble = mock(Assemble.class);
+        int actual = assemble.getStack().length;
+        assertEquals(5, actual);
+    }
+
+    @Test
+    void testDoAssemble_exit() {
+        ByteArrayInputStream in = new ByteArrayInputStream("exit".getBytes());
+        System.setIn(in);
+
+        Assemble assembleSpy = spy(new Assemble());
+        assembleSpy.doAssemble();
+
+        assertEquals(CarType_Q, assembleSpy.getStack()[0]);
+    }
+
     @Test
     void testBackStep_Engine_Q() {
         Assemble assembleSpy = Mockito.spy(new Assemble());
@@ -80,7 +48,13 @@ class AssembleTest {
         assertEquals(CarType_Q, actual);
     }
     @Test
-    void testBackStep_OutOfRange() {
+    void testBackStep_Run_Test() {
+        Assemble assembleSpy = Mockito.spy(new Assemble());
+        int actual = assembleSpy.backStep(Run_Test);
+        assertEquals(CarType_Q, actual);
+    }
+    @Test
+    void testBackStep_Run_Others() {
         Assemble assembleSpy = Mockito.spy(new Assemble());
         int actual = assembleSpy.backStep(-1);
         assertEquals(-1, actual);
@@ -124,49 +98,24 @@ class AssembleTest {
         assembleSpy.startCurrentStep(Run_Test);
         verify(assembleSpy, times(1)).showMenuForUser(Run_Test);
     }
-
     @Test
-    void testShowMenuForUser_CarType_Q() {
+    void testShowMenuBrakeSystemStrategy() {
         Assemble assembleSpy = Mockito.spy(new Assemble());
-        assembleSpy.showMenuForUser(CarType_Q);
-        verify(assembleSpy, times(1)).showCarTypeMenu();
+        assembleSpy.startCurrentStep(BrakeSystem_Q);
+        verify(assembleSpy, times(1)).showMenuForUser(BrakeSystem_Q);
     }
     @Test
-    void testShowMenuForUser_Engine_Q() {
+    void testShowMenuEngineStrategy() {
         Assemble assembleSpy = Mockito.spy(new Assemble());
-        assembleSpy.showMenuForUser(Engine_Q);
-        verify(assembleSpy, times(1)).showEngineMenu();
-    }
-    @Test
-    void testShowMenuForUser_BrakeSystem_Q() {
-        Assemble assembleSpy = Mockito.spy(new Assemble());
-        assembleSpy.showMenuForUser(BrakeSystem_Q);
-        verify(assembleSpy, times(1)).showBrakeMenu();
-    }
-    @Test
-    void testShowMenuForUser_SteeringSystem_Q() {
-        Assemble assembleSpy = Mockito.spy(new Assemble());
-        assembleSpy.showMenuForUser(SteeringSystem_Q);
-        verify(assembleSpy, times(1)).showSteeringMenu();
-    }
-    @Test
-    void testShowMenuForUser_Run_Test() {
-        Assemble assembleSpy = Mockito.spy(new Assemble());
-        assembleSpy.showMenuForUser(Run_Test);
-        verify(assembleSpy, times(1)).showRunTestMenu();
+        assembleSpy.startCurrentStep(Engine_Q);
+        verify(assembleSpy, times(1)).showMenuForUser(Engine_Q);
     }
 
     @Test
-    void testIsInvalidInputFormat_False() {
+    void testShowMenuForUser_Error() {
         Assemble assembleSpy = Mockito.spy(new Assemble());
-        boolean actual = assembleSpy.isInvalidInputFormat("5");
-        assertFalse(actual);
-    }
-    @Test
-    void testIsInvalidInputFormat_True() {
-        Assemble assembleSpy = Mockito.spy(new Assemble());
-        boolean actual = assembleSpy.isInvalidInputFormat("a");
-        assertTrue(actual);
+        assembleSpy.startCurrentStep(-1);
+        verify(assembleSpy, times(0)).showMenuForUser(Run_Test);
     }
 
     @Test
@@ -193,4 +142,122 @@ class AssembleTest {
         assertFalse(actual);
     }
 
+    @Test
+    void testIsValidRange() {
+        Assemble assembleSpy = Mockito.spy(new Assemble());
+        boolean actual = assembleSpy.isValidRange(-1, -1);
+        assertFalse(actual);
+    }
+    @Test
+    void testIsValidRange_CarType_True() {
+        Assemble assembleSpy = Mockito.spy(new Assemble());
+        boolean actual = assembleSpy.isValidRange(CarType_Q, 1);
+        assertTrue(actual);
+    }
+    @Test
+    void testIsValidRange_CarType_SmallFalse() {
+        Assemble assembleSpy = Mockito.spy(new Assemble());
+        boolean actual = assembleSpy.isValidRange(CarType_Q, -1);
+        assertFalse(actual);
+    }
+    @Test
+    void testIsValidRange_CarType_LargeFalse() {
+        Assemble assembleSpy = Mockito.spy(new Assemble());
+        boolean actual = assembleSpy.isValidRange(CarType_Q, 5);
+        assertFalse(actual);
+    }
+    @Test
+    void testIsValidRange_BrakeSystem_True() {
+        Assemble assembleSpy = Mockito.spy(new Assemble());
+        boolean actual = assembleSpy.isValidRange(BrakeSystem_Q, 1);
+        assertTrue(actual);
+    }
+    @Test
+    void testIsValidRange_BrakeSystem_SmallFalse() {
+        Assemble assembleSpy = Mockito.spy(new Assemble());
+        boolean actual = assembleSpy.isValidRange(BrakeSystem_Q, -1);
+        assertFalse(actual);
+    }
+    @Test
+    void testIsValidRange_BrakeSystem_LargeFalse() {
+        Assemble assembleSpy = Mockito.spy(new Assemble());
+        boolean actual = assembleSpy.isValidRange(BrakeSystem_Q, 5);
+        assertFalse(actual);
+    }
+
+    @Test
+    void testIsValidRange_Engine_Q_True() {
+        Assemble assembleSpy = Mockito.spy(new Assemble());
+        boolean actual = assembleSpy.isValidRange(Engine_Q, 1);
+        assertTrue(actual);
+    }
+    @Test
+    void testIsValidRange_Engine_Q_SmallFalse() {
+        Assemble assembleSpy = Mockito.spy(new Assemble());
+        boolean actual = assembleSpy.isValidRange(Engine_Q, -1);
+        assertFalse(actual);
+    }
+    @Test
+    void testIsValidRange_Engine_Q_LargeFalse() {
+        Assemble assembleSpy = Mockito.spy(new Assemble());
+        boolean actual = assembleSpy.isValidRange(Engine_Q, 5);
+        assertFalse(actual);
+    }
+    @Test
+    void testDoActionOfCurrentStep_CarType_Q() {
+        Assemble assembleSpy = Mockito.spy(new Assemble());
+        assembleSpy.doActionOfCurrentStep(CarType_Q, 1);
+
+        int actual = assembleSpy.getStack()[CarType_Q];
+        assertEquals(1, actual);
+    }
+    @Test
+    void testDoActionOfCurrentStep_BrakeSystem_Q() {
+        Assemble assembleSpy = Mockito.spy(new Assemble());
+        assembleSpy.doActionOfCurrentStep(BrakeSystem_Q, 1);
+
+        int actual = assembleSpy.getStack()[BrakeSystem_Q];
+        assertEquals(1, actual);
+    }
+    @Test
+    void testDoActionOfCurrentStep_Engine_Q() {
+        Assemble assembleSpy = Mockito.spy(new Assemble());
+        assembleSpy.doActionOfCurrentStep(Engine_Q, 1);
+
+        int actual = assembleSpy.getStack()[Engine_Q];
+        assertEquals(1, actual);
+    }
+    @Test
+    void testDoActionOfCurrentStep_RunTest_Q_Run() {
+        Assemble assembleSpy = Mockito.spy(new Assemble());
+        assembleSpy.doActionOfCurrentStep(Run_Test, 1);
+
+        int actual = assembleSpy.getStack()[Run_Test];
+        assertEquals(0, actual);
+    }
+    @Test
+    void testDoActionOfCurrentStep_RunTest_Q_Test() {
+        Assemble assembleSpy = Mockito.spy(new Assemble());
+        assembleSpy.doActionOfCurrentStep(Run_Test, 2);
+
+        int actual = assembleSpy.getStack()[Run_Test];
+        assertEquals(0, actual);
+    }
+
+    @Test
+    void testDoActionOfCurrentStep_Error() {
+        Assemble assembleSpy = Mockito.spy(new Assemble());
+        assembleSpy.doActionOfCurrentStep(-1, 1);
+
+        int actual = assembleSpy.getStack()[Engine_Q];
+        assertEquals(0, actual);
+    }
+    @Test
+    void testDoActionOfCurrentStep_Run_Test() {
+        Assemble assembleSpy = Mockito.spy(new Assemble());
+        assembleSpy.doActionOfCurrentStep(-1, 1);
+
+        int actual = assembleSpy.getStack()[Engine_Q];
+        assertEquals(0, actual);
+    }
 }
