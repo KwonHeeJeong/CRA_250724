@@ -26,20 +26,20 @@ public class RunTestStrategy implements AssembleStrategy {
     }
 
     public void doRunTest(int answer) {
+        int[] stack = Assemble.getStack();
         if (answer == 1) {
-            runProducedCar();
+            runProducedCar(stack);
             delay(1200);
         }
         else if (answer == 2) {
             System.out.println("Test...");
             delay(1500);
-            testProducedCar();
+            testProducedCar(stack);
             delay(1200);
         }
     }
 
-    protected void runProducedCar() {
-        int[] stack = Assemble.getStack();
+    protected void runProducedCar(int[] stack) {
         if (!isValidCheck()) {
             System.out.println("자동차가 동작되지 않습니다");
             return;
@@ -64,29 +64,53 @@ public class RunTestStrategy implements AssembleStrategy {
 
     protected boolean isValidCheck() {
         int[] stack = Assemble.getStack();
-        if (stack[CarType_Q] == SEDAN && stack[BrakeSystem_Q] == CONTINENTAL) return false;
-        if (stack[CarType_Q] == SUV   && stack[Engine_Q] == TOYOTA)       return false;
-        if (stack[CarType_Q] == TRUCK && stack[Engine_Q] == WIA)          return false;
-        if (stack[CarType_Q] == TRUCK && stack[BrakeSystem_Q] == MANDO)  return false;
-        if (stack[BrakeSystem_Q] == BOSCH_B && stack[SteeringSystem_Q] != BOSCH_S) return false;
+        if (isSedanAndContinental(stack)) return false;
+        if (isSuvAndToyota(stack))       return false;
+        if (isTruckAndWIA(stack))          return false;
+        if (isTruckAndMando(stack))  return false;
+        if (isOnlyBosch(stack)) return false;
         return true;
     }
 
-    protected void testProducedCar() {
-        int[] stack = Assemble.getStack();
-        if (stack[CarType_Q] == SEDAN && stack[BrakeSystem_Q] == CONTINENTAL) {
+    protected void testProducedCar(int[] stack) {
+        if (isSedanAndContinental(stack)) {
             fail("Sedan에는 Continental제동장치 사용 불가");
-        } else if (stack[CarType_Q] == SUV && stack[Engine_Q] == TOYOTA) {
+        }
+        if (isSuvAndToyota(stack)) {
             fail("SUV에는 TOYOTA엔진 사용 불가");
-        } else if (stack[CarType_Q] == TRUCK && stack[Engine_Q] == WIA) {
+        }
+        else if (isTruckAndWIA(stack)) {
             fail("Truck에는 WIA엔진 사용 불가");
-        } else if (stack[CarType_Q] == TRUCK && stack[BrakeSystem_Q] == MANDO) {
+        }
+        else if (isTruckAndMando(stack)) {
             fail("Truck에는 Mando제동장치 사용 불가");
-        } else if (stack[BrakeSystem_Q] == BOSCH_B && stack[SteeringSystem_Q] != BOSCH_S) {
+        }
+        else if (isOnlyBosch(stack)) {
             fail("Bosch제동장치에는 Bosch조향장치 이외 사용 불가");
-        } else {
+        }
+        else {
             System.out.println("자동차 부품 조합 테스트 결과 : PASS");
         }
+    }
+
+    private static boolean isOnlyBosch(int[] stack) {
+        return stack[BrakeSystem_Q] == BOSCH_B && stack[SteeringSystem_Q] != BOSCH_S;
+    }
+
+    private static boolean isTruckAndMando(int[] stack) {
+        return stack[CarType_Q] == TRUCK && stack[BrakeSystem_Q] == MANDO;
+    }
+
+    private static boolean isTruckAndWIA(int[] stack) {
+        return stack[CarType_Q] == TRUCK && stack[Engine_Q] == WIA;
+    }
+
+    private static boolean isSuvAndToyota(int[] stack) {
+        return stack[CarType_Q] == SUV && stack[Engine_Q] == TOYOTA;
+    }
+
+    private static boolean isSedanAndContinental(int[] stack) {
+        return stack[CarType_Q] == SEDAN && stack[BrakeSystem_Q] == CONTINENTAL;
     }
 
     protected void fail(String msg) {
